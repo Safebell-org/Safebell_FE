@@ -26,6 +26,13 @@ interface ContactRepository {
      * @return 사용자 존재 여부
      */
     suspend fun checkUserExists(phoneNumber: String): Boolean
+
+    /**
+     * 특정 전화번호로 가입된 사용자 정보를 가져옵니다.
+     * @param phoneNumber 확인할 전화번호
+     * @return 사용자 정보 (없으면 null)
+     */
+    suspend fun getUserInfo(phoneNumber: String): com.selfbell.domain.model.UserInfo?
     suspend fun getDeviceContacts(): List<ContactUser> // ✅ 로컬 연락처만 가져오는 함수 추가
 
 
@@ -49,4 +56,11 @@ interface ContactRepository {
      * @param contactId 수락할 연락처 요청 ID
      */
     suspend fun acceptContactRequest(contactId: Long)
+
+    /**
+     * 특정 사용자의 FCM 토큰을 가져옵니다.
+     * @param userId FCM 토큰을 가져올 사용자 ID
+     * @return FCM 토큰 (없으면 null)
+     */
+    suspend fun getUserFCMToken(userId: String): String?
 }

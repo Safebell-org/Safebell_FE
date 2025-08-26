@@ -29,7 +29,7 @@ class HistoryViewModel @Inject constructor(
 
     val currentFilter = MutableStateFlow(
         HistoryFilter(
-            userType = HistoryUserFilter.ALL,
+            userType = HistoryUserFilter.GUARDIANS,
             dateRange = HistoryDateFilter.WEEK,
             sortOrder = HistorySortOrder.LATEST
         )

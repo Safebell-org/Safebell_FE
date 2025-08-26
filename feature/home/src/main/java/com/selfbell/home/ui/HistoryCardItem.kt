@@ -3,22 +3,35 @@ package com.selfbell.home.ui.composables
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.selfbell.core.ui.theme.Typography
 import com.selfbell.domain.model.SafeWalkHistoryItem
+import com.selfbell.domain.model.SafeWalkStatus
+import com.selfbell.feature.home.R
+import java.time.LocalDateTime
+import com.selfbell.core.R as CoreR
+import com.selfbell.core.ui.theme.Primary
+import com.selfbell.core.ui.theme.GrayInactive
+import com.selfbell.core.ui.theme.Black
+import com.selfbell.core.ui.theme.Success
+import com.selfbell.core.ui.theme.Danger
+import com.selfbell.core.ui.composables.SelfBellButtonType
+import com.selfbell.core.ui.composables.SelfBellButton
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryCardItem(
     historyItem: SafeWalkHistoryItem, // SafeWalkDetail 타입
@@ -27,20 +40,24 @@ fun HistoryCardItem(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(
+            defaultElevation = 0.dp
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // ✅ 프로필 이미지 및 텍스트 정보
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // 프로필 이미지
                 Image(
-                    painter = painterResource(id = com.selfbell.core.R.drawable.default_profile_icon2),
+                    painter = painterResource(id = CoreR.drawable.default_profile_icon2),
                     contentDescription = "Profile Picture",
                     modifier = Modifier
                         .size(48.dp)
@@ -48,33 +65,46 @@ fun HistoryCardItem(
                     contentScale = ContentScale.Crop
                 )
                 Spacer(modifier = Modifier.width(16.dp))
-                // 이름 및 주소/날짜
                 Column {
                     Text(
-                        text = historyItem.ward.name, // 실제 사용자 이름
+                        text = historyItem.wardName, // 실제 사용자 이름
                         style = Typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = Black
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${historyItem.destination.addressText} · ${historyItem.startedAt.toLocalDate()}", // 실제 목적지와 시작 시간
+                        text = "${historyItem.destinationName} · ${historyItem.startedAt.toLocalDate()}", // 실제 목적지와 시작 시간
                         style = Typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Black
                     )
                 }
             }
-            // ✅ 상태 텍스트
-            Text(
-                text = when (historyItem.status) {
-                    "IN_PROGRESS" -> "귀가중"
-                    "COMPLETED" -> "완료"
-                    "CANCELED" -> "취소"
-                    "ENDED" -> "완료"
-                    else -> historyItem.status
-                },
-                style = Typography.bodyMedium,
-                color = if (historyItem.status == "IN_PROGRESS") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            SelfBellStatusBadge(status = historyItem.status)
         }
     }
+}
+
+@Composable
+private fun SelfBellStatusBadge(status: SafeWalkStatus) {
+    val buttonType = when (status) {
+        SafeWalkStatus.IN_PROGRESS -> SelfBellButtonType.PRIMARY_FILLED
+        SafeWalkStatus.ARRIVED, SafeWalkStatus.MANUAL_END -> SelfBellButtonType.LIGHTER_FILLED
+        SafeWalkStatus.TIMEOUT -> SelfBellButtonType.LIGHTER_FILLED // 취소 상태도 OUTLINED로 처리
+    }
+
+    val text = when (status) {
+        SafeWalkStatus.IN_PROGRESS -> "귀가중"
+        SafeWalkStatus.ARRIVED, SafeWalkStatus.MANUAL_END -> "완료"
+        SafeWalkStatus.TIMEOUT -> "완료" // 취소 상태도 "완료"로 표시
+    }
+
+    SelfBellButton(
+        text = text,
+        onClick = { },
+        buttonType = buttonType,
+        isSmall = true,
+        enabled = true,
+        modifier = Modifier.wrapContentSize()
+    )
 }

@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.selfbell.core.ui.theme.SelfBellTheme
 import androidx.compose.ui.tooling.preview.Preview
 import com.selfbell.domain.model.EmergencyBellDetail
+import com.selfbell.domain.model.CriminalDetail
 import android.util.Log // ✅ Log 클래스 임포트
 
 // 모달의 상태를 정의하는 Enum
@@ -45,9 +46,10 @@ fun AddressSearchModal(
     mapMarkers: List<MapMarkerData>,
     onMarkerItemClick: (MapMarkerData) -> Unit,
     selectedEmergencyBellDetail: EmergencyBellDetail?,
+    selectedCriminalDetail: CriminalDetail?,
     modalMode: ModalMode,
-    onModalModeChange: (ModalMode) -> Unit = {},
-    mapMarkerMode: MapMarkerMode, // ✅ mapMarkerMode 파라미터 추가
+    onDetailDismiss: () -> Unit,
+    mapMarkerMode: MapMarkerMode,
 ) {
     Surface(
         modifier = modifier
@@ -93,7 +95,7 @@ fun AddressSearchModal(
 
                     // ==== 마커 리스트 ====
                     val filteredMarkers = remember(mapMarkers, mapMarkerMode) {
-                        Log.d("AddressSearchModal", "Recomposing marker list. Total items: ${mapMarkers.size}, Mode: $mapMarkerMode") // ✅ 로그 추가
+                        Log.d("AddressSearchModal", "Recomposing marker list. Total items: ${mapMarkers.size}, Mode: $mapMarkerMode")
                         if (mapMarkerMode == MapMarkerMode.SAFETY_BELL_ONLY) {
                             mapMarkers.filter { it.type == MapMarkerData.MarkerType.SAFETY_BELL }
                         } else {
@@ -112,15 +114,14 @@ fun AddressSearchModal(
                             modifier = Modifier.fillMaxWidth().heightIn(max = 160.dp)
                         ) {
                             items(filteredMarkers) { markerData ->
-                                Log.d("AddressSearchModal", "Displaying item: ${markerData.address}, Type: ${markerData.type}") // ✅ 로그 추가
+                                Log.d("AddressSearchModal", "Displaying item: ${markerData.address}, Type: ${markerData.type}")
                                 Row(
-                                    Modifier.fillMaxWidth().height(40.dp).clickable {
-                                        if (markerData.type == MapMarkerData.MarkerType.SAFETY_BELL && markerData.objtId != null) {
-                                            // 안심벨 마커 클릭 시 상세정보 모드로 전환
-                                            onModalModeChange(ModalMode.DETAIL)
-                                        }
-                                        onMarkerItemClick(markerData)
-                                    },
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(40.dp)
+                                        .clickable {
+                                            onMarkerItemClick(markerData)
+                                        },
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Image(
@@ -145,40 +146,73 @@ fun AddressSearchModal(
                     }
                 }
                 ModalMode.DETAIL -> {
-                    // ==== 안심벨 상세 정보 ====
-                    selectedEmergencyBellDetail?.let { detail ->
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                    when {
+                        selectedEmergencyBellDetail != null -> {
+                            val detail = selectedEmergencyBellDetail
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.backstack_icon),
-                                    contentDescription = "뒤로가기",
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clickable { onModalModeChange(ModalMode.SEARCH) }
-                                )
-                                Spacer(Modifier.width(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.backstack_icon),
+                                        contentDescription = "뒤로가기",
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .clickable { onDetailDismiss() }
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = "안심벨 상세 정보",
+                                        style = Typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
+                                Spacer(Modifier.height(16.dp))
+                                Text("상세 주소: ${detail.address}", style = Typography.bodyMedium)
+                                Text("관리 전화: ${detail.managerTel}", style = Typography.bodyMedium)
+                                Text("시설 종류: ${detail.type}", style = Typography.bodyMedium)
                                 Text(
-                                    text = "안심벨 상세 정보",
-                                    style = Typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                    text = "거리: ${detail.distance?.let { "${it.toInt()}m" } ?: "알 수 없음"}",
+                                    style = Typography.bodyMedium
                                 )
                             }
-                            Spacer(Modifier.height(16.dp))
-                            Text("상세 주소: ${detail.address}", style = Typography.bodyMedium)
-                            Text("관리 전화: ${detail.managerTel}", style = Typography.bodyMedium)
-                            Text("시설 종류: ${detail.type}", style = Typography.bodyMedium)
-                            Text(
-                                text = "거리: ${detail.distance?.let { "${it.toInt()}m" } ?: "알 수 없음"}",
-                                style = Typography.bodyMedium
-                            )
-                            // TODO: 필요한 다른 정보 추가
                         }
-                    } ?: run {
-                        Text("상세 정보를 불러오는 중...", modifier = Modifier.align(Alignment.CenterHorizontally))
+                        selectedCriminalDetail != null -> {
+                            val detail = selectedCriminalDetail
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.backstack_icon),
+                                        contentDescription = "뒤로가기",
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .clickable { onDetailDismiss() }
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = "성범죄자 거주지 정보",
+                                        style = Typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
+                                Spacer(Modifier.height(16.dp))
+                                Text("주소지: ${detail.address}", style = Typography.bodyMedium)
+                                Text("유형: 거주지", style = Typography.bodyMedium)
+                                Text(
+                                    text = "거리: ${detail.distanceMeters.toInt()}m",
+                                    style = Typography.bodyMedium
+                                )
+                            }
+                        }
+                        else -> {
+                            Text("상세 정보를 불러오는 중...", modifier = Modifier.align(Alignment.CenterHorizontally))
+                        }
                     }
                 }
             }

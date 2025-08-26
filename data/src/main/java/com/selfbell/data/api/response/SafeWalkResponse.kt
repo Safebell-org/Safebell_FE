@@ -7,6 +7,7 @@ data class SafeWalkCreateRequest(
     val originAddress: String,
     val destination: LocationRequest,
     val destinationAddress: String,
+    @SerializedName("destinationName") val destinationName: String,
     val expectedArrival: String? = null,
     val timerMinutes: Int? = null,
     val guardianIds: List<Long>
@@ -60,7 +61,8 @@ data class SafeWalkDetailResponse(
     @SerializedName("startedAt") val startedAt: String,
     @SerializedName("expectedArrival") val expectedArrival: String? = null,
     @SerializedName("timerEnd") val timerEnd: String? = null,
-    @SerializedName("guardians") val guardians: List<GuardianResponse>
+    @SerializedName("guardians") val guardians: List<GuardianResponse>,
+    @SerializedName("endedAt") val endedAt: String? = null
 )
 data class WardResponse(
     @SerializedName("id") val id: Long, 

@@ -154,16 +154,16 @@ fun EscortScreen(
                 )
 
                 // 하단 '출발하기' 버튼
-                SelfBellButton(
-                    text = "출발하기",
-                    onClick = { viewModel.startSafeWalk() },
-                    enabled = isSetupComplete,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(floatingBottomPadding)
-                        .padding(bottom = 32.dp)
-                        .fillMaxWidth(0.9f)
-                )
+//                SelfBellButton(
+//                    text = "출발하기",
+//                    onClick = { viewModel.startSafeWalk() },
+//                    enabled = isSetupComplete,
+//                    modifier = Modifier
+//                        .align(Alignment.BottomCenter)
+//                        .padding(floatingBottomPadding)
+//                        .padding(bottom = 32.dp)
+//                        .fillMaxWidth(0.9f)
+//                )
             }
             EscortFlowState.GUARDIAN_SELECTION -> {
                 // --- 보호자 선택 단계 UI ---
@@ -175,7 +175,7 @@ fun EscortScreen(
                     selectedGuardians = selectedGuardians,
                     onGuardianToggle = viewModel::toggleGuardianSelection,
                     onStartWithGuardians = { viewModel.startSafeWalk() },
-                    onCloseClick = { viewModel.toggleGuardianShareSheet() }
+                    onCloseClick = { viewModel.returnToTimeSetup() }
                 )
             }
             EscortFlowState.IN_PROGRESS -> {
@@ -239,14 +239,17 @@ fun EscortingInfoCard(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text("안심귀가를 시작했어요!", style = Typography.titleMedium)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text("목적지: $destinationName", style = Typography.bodyMedium)
             }
-            Button(onClick = onShareClick) {
-                Text("공유")
-            }
+//            Button(onClick = onShareClick) {
+//                Text("공유")
+//            }
         }
     }
 }

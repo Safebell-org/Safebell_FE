@@ -4,7 +4,9 @@ import com.selfbell.data.api.request.ContactRequestDto
 import com.selfbell.data.api.request.ContactRequestRequest
 import com.selfbell.data.api.response.ContactListResponseDto
 import com.selfbell.data.api.response.ContactResponseDto
+import com.selfbell.data.api.response.FCMTokenResponse
 import com.selfbell.data.api.response.UserExistsResponse
+import com.selfbell.data.api.response.UserInfoResponse
 import com.selfbell.data.api.response.ContactRequestResponse
 import retrofit2.Response
 import retrofit2.http.*
@@ -23,6 +25,15 @@ interface ContactService {
     suspend fun checkUserExists(
         @Query("phoneNumber") phoneNumber: String
     ): UserExistsResponse
+
+    /**
+     * 특정 전화번호로 가입된 사용자 정보를 가져옵니다.
+     * @param phoneNumber 확인할 전화번호
+     */
+    @GET("/api/v1/users/info")
+    suspend fun getUserInfo(
+        @Query("phoneNumber") phoneNumber: String
+    ): UserInfoResponse
 
     /**
      * 서버에 등록된 연락처 목록을 가져옵니다. (상태별 필터링 가능)
@@ -54,4 +65,13 @@ interface ContactService {
     suspend fun acceptContactRequest(
         @Path("contactId") contactId: Long
     ): ContactResponseDto
+
+    /**
+     * 특정 사용자의 FCM 토큰을 가져옵니다.
+     * @param userId FCM 토큰을 가져올 사용자 ID
+     */
+    @GET("/api/v1/users/{userId}/fcm-token")
+    suspend fun getUserFCMToken(
+        @Path("userId") userId: String
+    ): FCMTokenResponse
 }

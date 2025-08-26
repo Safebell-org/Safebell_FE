@@ -38,8 +38,9 @@ fun SafeWalkDetailResponse.toDomainModel(): SafeWalkDetail {
         ward = this.ward.toDomainModel(),
         origin = this.origin.toDomainModel(),
         destination = this.destination.toDomainModel(),
-        status = this.status,
+        status = SafeWalkStatus.valueOf(this.status),
         startedAt = LocalDateTime.parse(this.startedAt),
+        endedAt = this.endedAt?.let { LocalDateTime.parse(it) },
         expectedArrival = this.expectedArrival?.let { LocalDateTime.parse(it) },
         timerEnd = this.timerEnd?.let { LocalDateTime.parse(it) },
         guardians = this.guardians.map { it.toDomainModel() }
@@ -49,14 +50,14 @@ fun SafeWalkDetailResponse.toDomainModel(): SafeWalkDetail {
 fun WardResponse.toDomainModel(): Ward {
     return Ward(
         id = this.id,
-        name = this.name
+        nickname = this.name
     )
 }
 
 fun GuardianResponse.toDomainModel(): Guardian {
     return Guardian(
         id = this.id,
-        name = this.name
+        nickname = this.name
     )
 }
 
@@ -65,5 +66,15 @@ fun LocationDetailResponse.toDomainModel(): LocationDetail {
         lat = this.lat,
         lon = this.lon,
         addressText = this.addressText
+    )
+}
+
+fun HistorySessionDto.toDomainModel(): SafeWalkHistoryItem {
+    return SafeWalkHistoryItem(
+        sessionId = this.session.id,
+        wardName = this.ward.name,
+        destinationName = this.session.destinationName,
+        startedAt = LocalDateTime.parse(this.session.startedAt),
+        status = SafeWalkStatus.fromString(this.session.status)
     )
 }

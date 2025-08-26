@@ -3,13 +3,14 @@ package com.selfbell.data.repository.impl
 import android.provider.ContactsContract
 import android.util.Log
 import com.selfbell.data.api.AuthService
-import com.selfbell.data.api.request.SignupRequest
-import com.selfbell.data.api.LoginRequest // LoginRequest import
-import com.selfbell.data.api.LoginResponse
+import com.selfbell.data.api.DeviceTokenUpdateRequest
+import com.selfbell.data.api.request.SignupRequest // ✅ import 추가
+import com.selfbell.data.api.LoginRequest // ✅ import 추가
+import com.selfbell.data.api.MainAddressRequest
+import com.selfbell.data.api.ProfileUpdateRequest
+import com.selfbell.data.api.RefreshTokenRequest
 import com.selfbell.domain.repository.AuthRepository
-import com.selfbell.domain.repository.User // User import
 import javax.inject.Inject
-import com.selfbell.data.api.MainAddressRequest // 📌 import
 import com.selfbell.data.mapper.toProfile
 import com.selfbell.domain.model.Profile
 
@@ -38,10 +39,12 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     // 📌 login 함수 추가
-    override suspend fun login(phoneNumber: String, password: String) {
+    override suspend fun login(phoneNumber: String, password: String, deviceToken: String, deviceType: String) {
         val request = LoginRequest(
             phoneNumber = phoneNumber,
-            password = password
+            password = password,
+//            deviceToken = deviceToken,
+//            deviceType = deviceType
         )
 //        val response = LoginResponse(
 //            accessToken = accessToken,
@@ -63,16 +66,16 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
     
-    override suspend fun registerMainAddress(name: String, address: String, lat: Double, lon: Double) {
+    override suspend fun registerMainAddress(address: String, lat: Double, lon: Double) {
         // ✅ 사전 체크: 토큰이 없으면 바로 실패 처리
         if (!tokenManager.hasValidToken()) {
             Log.e("AuthRepository", "메인 주소 등록 실패: 유효한 토큰이 없습니다. 로그인 후 다시 시도해주세요.")
             throw IllegalStateException("로그인이 필요합니다.")
         }
 
-        val request = MainAddressRequest(name, address, lat, lon)
+        val request = MainAddressRequest("메인 주소", address, lat, lon)
         try {
-            Log.d("AuthRepository", "메인 주소 등록 요청: name=$name, address=$address")
+            Log.d("AuthRepository", "메인 주소 등록 요청: address=$address")
             // ✅ AuthInterceptor가 자동으로 토큰을 추가하므로 토큰 파라미터 불필요
             val response = authService.registerMainAddress(request)
             if (response.isSuccessful) {
@@ -109,19 +112,18 @@ class AuthRepositoryImpl @Inject constructor(
             }
 
             Log.d("AuthRepository", "액세스 토큰 재발급 요청")
-            val request = com.selfbell.data.api.RefreshTokenRequest(refreshToken)
+            val request = RefreshTokenRequest(refreshToken)
             val response = authService.refreshToken(request)
 
             val newAccessToken = response.accessToken?.trim()
             val newRefreshToken = response.refreshToken?.trim()
 
             if (!newAccessToken.isNullOrBlank()) {
-                // 새 토큰들 저장
                 tokenManager.saveAccessToken(newAccessToken)
                 if (!newRefreshToken.isNullOrBlank()) {
                     tokenManager.saveRefreshToken(newRefreshToken)
                 }
-                
+
                 Log.d("AuthRepository", "액세스 토큰 재발급 성공")
                 return newAccessToken
             } else {
@@ -134,13 +136,41 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    // 프로필 조회 추가
-    suspend fun getUserProfile(): Profile {
+    // ✅ updateDeviceToken 구현
+    override suspend fun updateDeviceToken(token: String) {
+        try {
+            val request = DeviceTokenUpdateRequest(token, "ANDROID") // ✅ 새로운 요청 데이터 클래스
+            authService.updateDeviceToken(request)
+            Log.d("AuthRepository", "디바이스 토큰 서버 업데이트 성공")
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "디바이스 토큰 서버 업데이트 실패", e)
+            throw e
+        }
+    }
+
+    override suspend fun getUserProfile(): Profile {
         try {
             val dto = authService.getUserProfile()
             return dto.toProfile()
         } catch (e: Exception) {
             Log.e("AuthRepository", "사용자 프로필 가져오기 실패", e)
+            throw e
+        }
+    }
+
+    override suspend fun updateProfile(name: String) {
+        val request = ProfileUpdateRequest(name)
+        try {
+            Log.d("AuthRepository", "프로필 업데이트 요청: name=$name")
+            val response = authService.updateProfile(request)
+            if (response.isSuccessful) {
+                Log.d("AuthRepository", "프로필 업데이트 성공")
+            } else {
+                Log.e("AuthRepository", "프로필 업데이트 실패: ${response.code()}")
+                throw Exception("프로필 업데이트 실패: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "프로필 업데이트 예외: ${e.message}", e)
             throw e
         }
     }

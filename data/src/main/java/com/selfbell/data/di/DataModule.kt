@@ -3,6 +3,7 @@ package com.selfbell.data.di
 import android.content.Context
 import android.content.pm.PackageManager
 import com.selfbell.data.api.NaverApiService
+import com.selfbell.data.api.NaverReverseGeocodingService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,6 +18,8 @@ import javax.inject.Named
 import javax.inject.Singleton
 import com.selfbell.data.api.CriminalApi // ✅ 추가
 import com.selfbell.data.api.AuthInterceptor // ✅ 추가
+import com.selfbell.data.repository.impl.ReverseGeocodingRepositoryImpl
+import com.selfbell.domain.repository.ReverseGeocodingRepository
 import java.util.concurrent.TimeUnit
 
 @Module
@@ -62,6 +65,12 @@ object DataModule {
     @Singleton
     fun provideNaverApiService(@Named("naverRetrofit") retrofit: Retrofit): NaverApiService {
         return retrofit.create(NaverApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNaverReverseGeocodingService(@Named("naverRetrofit") retrofit: Retrofit): NaverReverseGeocodingService {
+        return retrofit.create(NaverReverseGeocodingService::class.java)
     }
 
     @Provides
@@ -117,7 +126,7 @@ object DataModule {
     @Named("criminalRetrofit")
     fun provideCriminalRetrofit(@Named("criminalOkHttpClient") okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://3.37.244.247:8080/") // 📌 여기에 실제 API 베이스 URL 입력
+            .baseUrl(com.selfbell.data.BuildConfig.API_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -127,5 +136,11 @@ object DataModule {
     @Singleton
     fun provideCriminalApi(@Named("criminalRetrofit") retrofit: Retrofit): CriminalApi {
         return retrofit.create(CriminalApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReverseGeocodingRepository(impl: ReverseGeocodingRepositoryImpl): ReverseGeocodingRepository {
+        return impl
     }
 }

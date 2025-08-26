@@ -1,10 +1,14 @@
 package com.selfbell.data.di
 
+import android.content.Context
+import com.selfbell.data.BuildConfig
+import com.selfbell.data.R
 import com.selfbell.data.api.AuthInterceptor
 import com.selfbell.data.api.AuthService
 import com.selfbell.data.api.ContactService
 import com.selfbell.data.api.CriminalApi
 import com.selfbell.data.api.EmergencyBellApi
+import com.selfbell.data.api.FCMNotificationApi
 import com.selfbell.data.api.FavoriteAddressService
 import com.selfbell.data.api.SafeWalksApi
 import com.selfbell.data.repository.impl.CriminalRepositoryImpl
@@ -17,6 +21,7 @@ import com.selfbell.domain.repository.FavoriteAddressRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -30,7 +35,15 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "http://3.37.244.247:8080/"
+    @Provides
+    @Singleton
+    @Named("baseUrl")
+    fun provideBaseUrl(@ApplicationContext context: Context): String {
+        // Context를 통해 R.string 리소스에 접근합니다.
+        return context.getString(R.string.base_url)
+    }
+
+
 
     /**
      * AuthInterceptor가 토큰 재발급 시에만 사용하는 별도의 OkHttpClient
@@ -54,9 +67,13 @@ object NetworkModule {
     @Provides
     @Singleton
     @Named("authRetrofit")
-    fun provideAuthRetrofit(@Named("authOkHttpClient") okHttpClient: OkHttpClient): Retrofit {
+
+    fun provideAuthRetrofit(
+        @Named("authOkHttpClient") okHttpClient: OkHttpClient,
+        @Named("baseUrl") baseUrl: String
+    ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(baseUrl) // ✅ 2. 파라미터로 받은 baseUrl을 사용합니다.
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -112,9 +129,12 @@ object NetworkModule {
     @Singleton
     @Provides
     @Named("backendRetrofit")
-    fun provideRetrofit(@Named("backendOkHttpClient") okHttpClient: OkHttpClient): Retrofit {
+    fun provideRetrofit(
+        @Named("backendOkHttpClient") okHttpClient: OkHttpClient,
+        @Named("baseUrl") baseUrl: String
+    ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(baseUrl) // ✅ 2. 파라미터로 받은 baseUrl을 사용합니다.
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -141,22 +161,15 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideEmergencyBellRepository(api: EmergencyBellApi): EmergencyBellRepository {
-        return EmergencyBellRepositoryImpl(api)
+    fun provideFCMNotificationApi(@Named("backendRetrofit") retrofit: Retrofit): FCMNotificationApi {
+        return retrofit.create(FCMNotificationApi::class.java)
     }
 
-    // 범죄자 API 관련 코드 추가
-//    @Provides
-//    @Singleton
-//    fun provideCriminalApi(@Named("backendRetrofit") retrofit: Retrofit): CriminalApi {
-//        return retrofit.create(CriminalApi::class.java)
-//    }
-
-//    @Provides
-//    @Singleton
-//    fun provideCriminalRepository(api: CriminalApi): CriminalRepository {
-//        return CriminalRepositoryImpl(api)
-//    }
+    @Provides
+    @Singleton
+    fun provideEmergencyBellRepository(api: EmergencyBellApi, fcmNotificationApi: FCMNotificationApi): EmergencyBellRepository {
+        return EmergencyBellRepositoryImpl(api, fcmNotificationApi)
+    }
 
     // SafeWalks API 관련 코드 추가
     @Provides
