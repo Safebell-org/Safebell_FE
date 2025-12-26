@@ -35,8 +35,14 @@ android {
         buildConfigField("String", "NAVER_API_CLIENT_ID", "\"${properties.getProperty("NAVER_API_CLIENT_ID", "")}\"")
         buildConfigField("String", "NAVER_API_CLIENT_SECRET", "\"${properties.getProperty("NAVER_API_CLIENT_SECRET", "")}\"")
 
-        resValue("string", "base_url", properties.getProperty("API_BASE_URL", ""))
-        resValue("string", "websocket_endpoint", properties.getProperty("WEBSOCKET_ENDPOINT", ""))
+        // API Base URLs 설정
+        val apiBaseUrl = properties.getProperty("API_BASE_URL") ?: "http://localhost:8080"
+        val stompWsUrl = properties.getProperty("STOMP_WS_URL") ?: "ws://localhost:8080/ws"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "STOMP_WS_URL", "\"$stompWsUrl\"")
+
+        resValue("string", "base_url", apiBaseUrl)
+        resValue("string", "websocket_endpoint", stompWsUrl)
 
     }
 
