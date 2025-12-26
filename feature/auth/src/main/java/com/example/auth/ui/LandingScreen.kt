@@ -73,11 +73,11 @@ fun LandingScreen(
                     .width(343.dp)
                     .height(48.dp)
                     .background(color = Primary, shape = RoundedCornerShape(size = 16.dp))
-                    .clickable { onSignUpClick() }
+                    .clickable { onLoginClick() }
                     .padding(start = 27.dp, top = 12.dp, end = 27.dp, bottom = 12.dp)
             ){
                 Text(
-                    text = "회원가입",
+                    text = "로그인하기",
                     modifier = Modifier.align(Alignment.Center),
                     fontFamily = FontFamily(Font(com.selfbell.core.R.font.gabarito_variablefont_wght)),
                     fontSize = 18.sp,
@@ -100,8 +100,8 @@ fun LandingScreen(
                     )
                 )
                 Text(
-                    text = "로그인하기",
-                    modifier = Modifier.clickable { onLoginClick() },
+                    text = "회원가입",
+                    modifier = Modifier.clickable { onSignUpClick() },
                     style = TextStyle(
                         fontSize = 14.sp,
                         fontFamily = FontFamily(Font(com.selfbell.core.R.font.gabarito_variablefont_wght)),
