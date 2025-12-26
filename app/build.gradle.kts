@@ -3,7 +3,10 @@ import java.util.Properties
 
 // Load local.properties
 val properties = Properties().apply {
-    load(FileInputStream(rootProject.file("local.properties")))
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(FileInputStream(localPropertiesFile))
+    }
 }
 
 plugins {
@@ -36,12 +39,15 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Manifest Placeholder 설정
-        addManifestPlaceholders(mapOf("NAVER_MAPS_CLIENT_ID" to properties.getProperty("NAVER_MAPS_CLIENT_ID")))
-        resValue("string", "naver_maps_client_id_from_gradle", properties.getProperty("NAVER_MAPS_CLIENT_ID"))
+        val naverMapsClientId = properties.getProperty("NAVER_MAPS_CLIENT_ID") ?: ""
+        addManifestPlaceholders(mapOf("NAVER_MAPS_CLIENT_ID" to naverMapsClientId))
+        resValue("string", "naver_maps_client_id_from_gradle", naverMapsClientId)
         
         // API Base URLs 설정
-        buildConfigField("String", "API_BASE_URL", "\"${properties.getProperty("API_BASE_URL")}\"")
-        buildConfigField("String", "STOMP_WS_URL", "\"${properties.getProperty("STOMP_WS_URL")}\"")
+        val apiBaseUrl = properties.getProperty("API_BASE_URL") ?: "http://localhost:8080"
+        val stompWsUrl = properties.getProperty("STOMP_WS_URL") ?: "ws://localhost:8080/ws"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "STOMP_WS_URL", "\"$stompWsUrl\"")
 
     }
 
